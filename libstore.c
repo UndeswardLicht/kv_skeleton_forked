@@ -17,6 +17,7 @@ create_store()
 
 	store *s = malloc(sizeof(store));
 
+        debug("Store created");
 	return memcpy(s, &element, sizeof(store));
 }
 

@@ -6,8 +6,7 @@
 
 #define STORE_SIZE 100 /* *2 */
 
-static int
-test_fill(store *st)
+static int test_fill(store *st)
 {
 	for (int i = 0; i < STORE_SIZE; i++) {
 		char key_str[MAX_STRING_LENGTH] = {0};

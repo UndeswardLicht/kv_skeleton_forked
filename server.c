@@ -7,9 +7,7 @@
 #include "libcomm.h"
 #include "libstore.h"
 
-int
-main(void)
-{
+int main(void){
 	store *st = create_store();
 	int fd_server;
 	int fd_client;

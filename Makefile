@@ -49,13 +49,18 @@ libstore.o: libstore.h
 
 libcomm.o: libcomm.h
 
-install: main libstore.so libcomm.so 
-	cp -f main $(bindir)/main
+.PHONY: install
+install: server libstore.so libcomm.so myserver.service
+	cp -f server $(bindir)/server
 	cp -f libstore.so.$(SOVERSION) $(libdir)/libstore.so.$(SOVERSION)
 	cp -f libcomm.so.$(SOVERSION) $(libdir)/libcomm.so.$(SOVERSION)
+	cp -f myserver.service /etc/systemd/system/myserver.service
 
+.PHONY: distclean
 distclean:
-	rm -f $(bindir)/main $(libdir)/libstore.so.* $(libdir)/libcomm.so.*
+	systemctl stop myserver || true
+	systemctl disable myserver || true
+	rm -f $(bindir)/main $(libdir)/libstore.so.* $(libdir)/libcomm.so.* /etc/systemd/system/myserver.service
 
 .PHONY: clean
 clean:

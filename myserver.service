@@ -1,0 +1,12 @@
+[Unit]
+Description=Service for laboratory project
+After=network.target
+Before=multi-user.target
+
+[Service]
+ExecStart=/usr/local/bin/server
+Type=simple
+Restart=always
+
+[Install]
+WantedBy=default.target
