@@ -31,34 +31,36 @@ int create_client_pipe(pid_t pid){
    /tmp/client.<PID>.fifo
  -  don't know how to pass func argument to it yet
  */
-  char pipe_name[] = "/tmp/client...fifo";
+  char pipe_name[] = "/tmp/client.";
+  char postfix[] = ".pipe";
+  sprintf(pipe_name, "%d", pid);
+  strcat(pipe_name,postfix);
+
   int fd_client;
   (void)umask(0);
 
   if(mknod(pipe_name, S_IFIFO | 0666, 0) < 0){
-    printf("Can't create client pipe!\n");
-    exit(-1);
+     error("Cannot create client pipe: %s\n", strerror(errno));
+    return -1;
   }
 
   if((fd_client = open(pipe_name,O_RDONLY)) < 0){
-    printf("Can't open client pipe for reading!\n");
-    exit(-1);
+    error("Can't open client pipe for reading: %s\n", strerror(errno))
+    return -1;
   }
+  
   return fd_client;
 }
 
-//As I understand it: there should be a call which returns the server pipe fd - to the client and the client pipe fd - to the server
+//As I understand it: there should be a call which returns the server pipe fd - to the client and the client pipe fd - to the server by the path name of one of them
 static int connect_pipe(char *path){
 
   int fd;
-  //  if((fd = open(path,O_WRONLY)) < 0){
+  if((fd = open(path,O_WRONLY)) < 0){
     printf("Can't open pipe for sending data!\n");
     exit(-1);
   }
-	/* FIXME:
-	 * - open pipe by path for sending data
-	 * - return descriptor
-	 */
+  
   return fd;
 }
 
@@ -68,8 +70,8 @@ int connect_to_server(void){
 	warning("stub");
 	fd = connect_pipe("/tmp/server.pipe");
 	if (fd < 0) {
-		error("unable to connect: %s", strerror(errno));
-		return -1;
+          error("unable to connect: %s", strerror(errno));
+          return -1;
 	}
 
 	return fd;
@@ -77,49 +79,56 @@ int connect_to_server(void){
 
 //This func is used by the server only. It takes PID as an  arg and returns int - file descriptor number of the client's pipe, if the call was successfull
 int connect_to_client(pid_t pid){
-	/* FIXME: change path according PID */
-	char path[] = "/tmp/client.<PID>.pipe";
-	int fd;
+  char path[] = "/tmp/client.";
+  char postfix[] = ".pipe";
+  sprintf(path, "%d", pid);
+  strcat(path,postfix);
 
-	warning("stub");
-
-	fd = connect_pipe(path);
-	if (fd < 0) {
-		error("unable to connect to %s: %s", path, strerror(errno));
-		return FALSE;
-	}
-
-	return fd;
+  int fd;
+  fd = connect_pipe(path);
+  if (fd < 0) {
+    error("unable to connect to %s: %s", path, strerror(errno));
+    return FALSE;
+  }
+  return fd;
 }
 
+//Function to disconnect pipes from each other. Takes fd as an argument, returns nothing
 int disconnect_pipe(int fd){
-	warning("stub");
-	/* FIXME:
-	 * - close the pipe
-	 */
 
-	return TRUE;
+  if(close(fd) < 0){
+    error("Can't close the pipe: %s\n", strerror(errno));
+    return -1;
+  }
+
+  printf("The pipe is closed!\n");
+  return TRUE;
 }
 
+//Function is used both server and client to destroy their pipe objects
 int destroy_pipe(int fd, pid_t pid){
-	warning("stub");
+  char server_pipe[] = "/tmp/server.pipe";
+  char client_pipe[] = "/tmp/client.";
+  char postfix[] = ".pipe";
 
-	if (fd > 0)
-		disconnect_pipe(fd);
 
-	/* FIXME:
-	 * - unlink pipe file object
-	 */
-	if (pid == 0) {
-		/* unlink server pipe */
-	} else {
-		/* unlink client pipe by PID */
-	}
+  if (fd > 0)
+    disconnect_pipe(fd);
 
-	return TRUE;
+  if (pid == 0) {
+    unlink(server_pipe);
+  } else {
+    sprintf(client_pipe, "%d", pid);
+    strcat(client_pipe,postfix);
+    
+    unlink(client_pipe);
+  }
+  return TRUE;
 }
 
-int send_msg(int fd, char *buf, size_t buf_len){
+int
+send_msg(int fd, char *buf, size_t buf_len)
+{
 	int count;
 	char data[MAX_STRING_LENGTH + 10] = {0};
 
@@ -143,7 +152,9 @@ int send_msg(int fd, char *buf, size_t buf_len){
 	return TRUE;
 }
 
-int recv_msg(int fd, char *buf, size_t buf_len){
+int
+recv_msg(int fd, char *buf, size_t buf_len)
+{
 	int count;
 
 	/* FIXME: read from stdin */

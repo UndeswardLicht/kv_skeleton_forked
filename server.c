@@ -20,6 +20,8 @@ int main(void){
 
 	/* FIXME: proper descriptors */
 	fd_server = create_server_pipe();
+
+        //прежде чем делать следующий вызов, через пайп прочитать ПИД клиента
 	fd_client = connect_to_client(12345);
 
 	/* assume blocking I/O */
@@ -47,6 +49,8 @@ int main(void){
 	}
 
 	remove_store(st);
+
+        //is this call 'disconnect' really needed in the server?
 	disconnect_pipe(fd_client);
 	destroy_pipe(fd_server, 0);
 	return 0;
