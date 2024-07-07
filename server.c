@@ -1,6 +1,7 @@
 #include "config.h"
 
 #include <errno.h>
+#include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -15,38 +16,56 @@ main(void)
 	int fd_client;
 	int i = 0;
 	char buf_in[MAX_STRING_LENGTH];
-
+       
 	if (st == NULL) {
 		fatal("unable to initialize store");
 	}
 
 	/* FIXME: proper descriptors */
 	fd_server = create_server_pipe();
-	fd_client = connect_to_client(12345);
+        debug("Sr: Server pipe created\n");
 
+        int pid[9];
+        read(fd_server, pid, sizeof(pid));
+        printf("this is client PID: %s \n", pid);
+
+        int client_pid = atoi(pid);
+        fd_client = connect_to_client(client_pid);
+        debug("Sr: Connected to client pipe\n");
+
+        
 	/* assume blocking I/O */
-	while (recv_msg(fd_server, buf_in, sizeof(buf_in)) == TRUE) {
+        //	while (recv_msg(fd_server, buf_in, sizeof(buf_in)) == TRUE) {
 		/* FIXME: example */
-		char key[MAX_STRING_LENGTH] = {0};
+
+       		char key[MAX_STRING_LENGTH] = {0};
+                
 		char *value = NULL;
 		char buf_out[MAX_STRING_LENGTH];
 
-		/* FIXME: parse input string here */
-		debug("read: %s", buf_in);
+        recv_msg(fd_server, buf_in, sizeof(buf_in));
+        printf("this is msg from client: %s\n", buf_in);
 
-		/* FIXME: storing whole string */
-		snprintf(key, sizeof(key), "string_%d", i++);
-		add_string(st, key, buf_in);
 
-		/* FIXME: generate message to client here */
-		value = get_value_by_key(st, key);
-		snprintf(buf_out, sizeof(buf_out), "echo: %s = %s", key, value);
-		free(value);
+        char msg[] = "Some msg from server";
+        send_msg(fd_client, msg, sizeof(msg));
 
-		if (send_msg(fd_client, buf_out, strnlen(buf_out, sizeof(buf_out))) != TRUE) {
-			fatal("write error: %s", strerror(errno));
-		}
-	}
+		/* /\* FIXME: parse input string here *\/ */
+		/* debug("read: %s", buf_in); */
+
+		/* /\* FIXME: storing whole string *\/ */
+		/* snprintf(key, sizeof(key), "string_%d", i++); */
+		/* add_string(st, key, buf_in); */
+
+		/* /\* FIXME: generate message to client here *\/ */
+		/* value = get_value_by_key(st, key); */
+		/* snprintf(buf_out, sizeof(buf_out), "echo: %s = %s", key, value); */
+		/* free(value); */
+
+	/* 	if (send_msg(fd_client, buf_out, strnlen(buf_out, sizeof(buf_out))) != TRUE) { */
+	/* 		fatal("write error: %s", strerror(errno)); */
+	/* 	} */
+	/* } */
 
 	remove_store(st);
 	disconnect_pipe(fd_client);

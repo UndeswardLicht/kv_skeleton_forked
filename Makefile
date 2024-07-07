@@ -22,11 +22,14 @@ CFLAGSLIB = -fPIC $(CFLAGS)
 LIBS = libstore.so.$(SOVERSION)
 LIBS += libcomm.so.$(SOVERSION)
 
-TARGETS = server teststore
+TARGETS = server teststore client
 
 all: $(TARGETS)
 
 # LD_LIBRARY_PATH=$PWD ./main
+client: client.o $(LIBS)
+	$(CC) $(LDFLAGS) $< -lcomm -o $@
+
 server: server.o $(LIBS)
 	$(CC) $(LDFLAGS) $< -lstore -lcomm -o $@
 
@@ -50,7 +53,8 @@ libstore.o: libstore.h
 libcomm.o: libcomm.h
 
 .PHONY: install
-install: server libstore.so libcomm.so myserver.service
+install: server client libstore.so libcomm.so myserver.service
+	cp -f client $(bindir)/client
 	cp -f server $(bindir)/server
 	cp -f libstore.so.$(SOVERSION) $(libdir)/libstore.so.$(SOVERSION)
 	cp -f libcomm.so.$(SOVERSION) $(libdir)/libcomm.so.$(SOVERSION)
