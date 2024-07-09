@@ -5,6 +5,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include "libcomm.h"
 
 /* HINT: __maybe__ easier to use FILE steam for communication, instead
  * of low-level descriptors, since the stream is based on strings.
@@ -24,12 +25,8 @@ create_server_pipe()
     debug("Failed to create server pipe");
     exit(-1);
   }
-
-  if((fd_server = open(pipe_name,O_RDONLY)) < 0){
-    error("Can't open server pipe for reading!\n");
-    debug("Failed to open server pipe to read");
-    exit(-1);
-  }
+  fd_server = connect_to_server();
+  debug("Sr: Server pipe created");
   return fd_server;
 }
 
@@ -49,21 +46,16 @@ create_client_pipe(pid_t pid)
      debug("Failed to create client pipe");
      exit(-1);
   }
-
-  if((fd_client = open(pipe_name,O_RDONLY | O_NONBLOCK)) < 0){
-    error("Can't open client pipe for reading: %s\n", strerror(errno));
-    debug("Failed to create client pipe for reading");
-    exit (-1);
-  }
-  return fd_client;
+  debug("Cl: Client pipe created");
+  return TRUE;
 }
 
 static int
 connect_pipe(char *path)
 {
   int fd;
-  if((fd = open(path,O_WRONLY)) < 0){
-    printf("Can't open pipe '%s' for writing data! Errno: %d\n", path,errno);
+  if((fd = open(path,O_RDWR)) < 0){
+    printf("Can't open pipe '%s' for reading|writing data! Errno: %d\n", path,errno);
     exit(-1);
   }
   printf("Libcm: opened pipe '%s' for writing!\n",path);

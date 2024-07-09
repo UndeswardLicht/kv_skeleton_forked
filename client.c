@@ -18,53 +18,40 @@ int main(){
   client_pid = getpid();
   char message[MAX_STRING_LENGTH];
 
+  create_client_pipe(client_pid);
+
   fd_server = connect_to_server();
   debug("Cl: Connected to server pipe");
 
-  //  write(fd_server, client_pid, sizeof(client_pid));
-  // char msg[] = "Some msg from client";
-  char pid[9];
-  sprintf(pid, "%d", client_pid);
-  debug("My pid is %s\n", pid);
+  /* char pid[9]; */
+  /* sprintf(pid, "%d", client_pid); */
+  debug("My pid is %d\n", client_pid);
 
-  fd_client = create_client_pipe(client_pid);
-  debug("Cl: Client pipe created");
-  write(fd_server, pid, sizeof(pid));
+  fd_client = connect_to_client(client_pid);
 
-  /* send_msg(fd_server, msg, sizeof(msg)); */
-  /* debug("msg is sent from client on srvr pipe, waiing for rspns\n"); */
+  char buf_in[MAX_STRING_LENGTH];
+  bool valid = false;
 
-  read(fd_client, message, sizeof(message));
-  printf("%s \n", message);
+  while(TRUE){
+    //    while(!valid){
+        printf("> ");
+        fgets(buf_in, 1024, stdin);
+        //        valid = validateString(buf_in);
+        //    }
+        int res = send_msg(fd_server, buf_in, strlen(buf_in));
+        if (res != 1){
+          fprintf(stderr, "Cl: Failed to send msg\n");
+        }
 
-  /* char buf_in[MAX_STRING_LENGTH]; */
-  /* bool valid = false; */
-  /* while(!valid){ */
-  /*       printf("> "); */
-  /*       fgets(buf_in, 1024, stdin); */
-  /*       valid = validateString(buf_in); */
-  /*     } */
+        if(recv_msg(fd_client, message, sizeof(message)) == TRUE){
+          printf("%s", message);
+        }
+        printf("\n");
 
-  /* /\* char response[MAX_STRING_LENGTH]; *\/ */
-  /* /\* recv_msg(fd_client, response, sizeof(response)); *\/ */
-  /* /\* printf("response msg from server is: %s\n", response); *\/ */
+      }
 
-  /* char buf_out[MAX_STRING_LENGTH]; */
-  /*  while (send_msg(fd_server, buf_in, sizeof(buf_in)) == TRUE){ */
-
-  /*    if(recv_msg(fd_client, buf_out,sizeof(buf_out)) != TRUE){ */
-  /*      fatal("Cl: error when trying to read response from server: %s ", strerror(errno)); */
-  /*    } */
-  /*  } */
-
-
-
-
-
-
-
-  destroy_pipe(fd_client, client_pid);
-  disconnect_pipe(fd_server);
+    destroy_pipe(fd_client, client_pid);
+    disconnect_pipe(fd_server);
 
 
   return 0;
