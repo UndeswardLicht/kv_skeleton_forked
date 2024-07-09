@@ -50,7 +50,7 @@ create_client_pipe(pid_t pid)
      exit(-1);
   }
 
-  if((fd_client = open(pipe_name,O_RDONLY)) < 0){
+  if((fd_client = open(pipe_name,O_RDONLY | O_NONBLOCK)) < 0){
     error("Can't open client pipe for reading: %s\n", strerror(errno));
     debug("Failed to create client pipe for reading");
     exit (-1);
@@ -173,7 +173,7 @@ recv_msg(int fd, char *buf, size_t buf_len)
 		error("error on read");
 		return FALSE;
 	}
-        
+
 	if (count == 0) {
 		debug("EOF");
 		return FALSE;
@@ -181,6 +181,8 @@ recv_msg(int fd, char *buf, size_t buf_len)
 
 	return TRUE;
 }
+
+
 
 void
 init(void)
