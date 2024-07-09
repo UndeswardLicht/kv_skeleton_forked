@@ -58,7 +58,7 @@ connect_pipe(char *path)
     printf("Can't open pipe '%s' for reading|writing data! Errno: %d\n", path,errno);
     exit(-1);
   }
-  printf("Libcm: opened pipe '%s' for writing!\n",path);
+  debug("Libcm: opened pipe '%s' for writing",path);
   return fd;
 }
 
@@ -78,15 +78,15 @@ connect_to_server(void)
 int
 connect_to_client(pid_t pid)
 {
-  char path[] = "/tmp/client.";
+  char pipe_name[] = "/tmp/client.";
   char postfix[] = ".pipe";
-  sprintf(path, "%d", pid);
-  strcat(path,postfix);
+  sprintf(pipe_name, "%d", pid);
+  strcat(pipe_name,postfix);
 
   int fd;
-  fd = connect_pipe(path);
+  fd = connect_pipe(pipe_name);
   if (fd < 0) {
-    error("unable to connect to %s: %s\n", path, strerror(errno));
+    error("unable to connect to %s: %s\n", pipe_name, strerror(errno));
     return FALSE;
   }
   return fd;
@@ -110,16 +110,23 @@ destroy_pipe(int fd, pid_t pid)
   char server_pipe[] = "/tmp/server.pipe";
   char client_pipe[] = "/tmp/client.";
   char postfix[] = ".pipe";
+  sprintf(client_pipe, "%d", pid);
+  strcat(client_pipe,postfix);
 
-  if (fd > 0)
-    disconnect_pipe(fd);
-
+  /* if (fd > 0) */
+  /*   disconnect_pipe(fd);  */
   if (pid == 0) {
+    disconnect_pipe(fd);
     unlink(server_pipe);
-  } else {
+    printf("'%s' destroyed!\n", server_pipe);
+  }
+  else {
+    disconnect_pipe(fd);
     sprintf(client_pipe, "%d", pid);
-    strcat(client_pipe,postfix); 
+    strcat(client_pipe,postfix);
     unlink(client_pipe);
+    printf("'%s' destroyed!\n", client_pipe);
+
   }
   return TRUE;
 }

@@ -4,28 +4,33 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdbool.h>
+#include <signal.h>
 
 #include "libcomm.h"
 #include "libstore.h"
 
 bool validateString(char *input);
+void handler(int i);
+void vsioRebiataHare(int a, int b);
+
+int fd_client = -1;
+int fd_server = -1;
+pid_t client_pid = 0;
 
 int main(){
 
-  pid_t client_pid;
-  int fd_client;
-  int fd_server;
+  /* pid_t client_pid; */
+  /* int fd_client; */
+  /* int fd_server; */
   client_pid = getpid();
   char message[MAX_STRING_LENGTH];
+  signal(SIGINT, handler);
 
   create_client_pipe(client_pid);
 
   fd_server = connect_to_server();
   debug("Cl: Connected to server pipe");
-
-  /* char pid[9]; */
-  /* sprintf(pid, "%d", client_pid); */
-  debug("My pid is %d\n", client_pid);
+  debug("My pid is %d", client_pid);
 
   fd_client = connect_to_client(client_pid);
 
@@ -33,27 +38,28 @@ int main(){
   bool valid = false;
 
   while(TRUE){
-    //    while(!valid){
+
+      while(!valid){
         printf("> ");
         fgets(buf_in, 1024, stdin);
-        //        valid = validateString(buf_in);
-        //    }
-        int res = send_msg(fd_server, buf_in, strlen(buf_in));
-        if (res != 1){
+        valid = validateString(buf_in);
+      }
+      valid = false;
+
+        if(send_msg(fd_server, buf_in, strlen(buf_in)) == 1){
+            printf("Cl: Sent to server pipe: %s\n", buf_in);
+        }else{
           fprintf(stderr, "Cl: Failed to send msg\n");
         }
 
-        if(recv_msg(fd_client, message, sizeof(message)) == TRUE){
-          printf("%s", message);
-        }
-        printf("\n");
-
+      sleep(1);
+      while(recv_msg(fd_client, message, sizeof(message)) == TRUE){
+        printf("%s", message);
+          break;
       }
+     }
 
-    destroy_pipe(fd_client, client_pid);
-    disconnect_pipe(fd_server);
-
-
+  vsioRebiataHare(fd_client,client_pid);
   return 0;
 }
 
@@ -64,7 +70,6 @@ bool validateString(char *input){
     type = strtok(NULL, " ");
     key = strtok(NULL, " ");
     value = strtok(NULL, " ");
-    debug("Cl: first: %s, second: %s, third:%s, fourth:%s\n", method, type, key, value);
 
     int i = 0;
     int wrd = 0;
@@ -76,21 +81,36 @@ bool validateString(char *input){
     }
 
      if(wrd < 3){
-     printf("Command contains less than 3 words!\n");
+     warning("Command contains less than 3 words!\n");
      return false;
      }
 
      if(strcmp(method, "get") != 0 &&
         strcmp(method, "set") != 0){
-       printf("No such command! enter either 'get' or 'set'.\n");
+       warning("No such command! enter either 'get' or 'set'.\n");
        return false;
      }
 
      if(strcmp(type, "int") != 0 &&
         strcmp(type, "string") != 0){
-       printf("Your type should be either 'int' or 'string.\n'");
+       warning("Your type should be either 'int' or 'string.\n'");
        return false;
      }
 
+     free(cp);
   return true;
+}
+
+void vsioRebiataHare(int fd_client, int client_pid){
+    destroy_pipe(fd_client, client_pid);
+}
+
+void handler(int signal){
+  char *confirmation[30] = {0};
+  printf("Received signal: %d\n", signal);
+  write(fd_server, "fin", 4);
+  read(fd_client, confirmation, 30);
+  printf("%s\n", confirmation);
+  vsioRebiataHare(fd_client, client_pid);
+  exit(0);
 }
