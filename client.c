@@ -19,9 +19,6 @@ pid_t client_pid = 0;
 
 int main(){
 
-  /* pid_t client_pid; */
-  /* int fd_client; */
-  /* int fd_server; */
   client_pid = getpid();
   char message[MAX_STRING_LENGTH];
   signal(SIGINT, handler);
@@ -63,6 +60,7 @@ int main(){
   return 0;
 }
 
+///Input validator returns boolean type, takes char pointer as an argument - this is the string we read in the main method from user input before
 bool validateString(char *input){
     char *cp, *method, *type, *key, *value;
     cp = strdup(input);
@@ -101,10 +99,13 @@ bool validateString(char *input){
   return true;
 }
 
+//void takes two ints - descriptor and client_pid
+///
 void vsioRebiataHare(int fd_client, int client_pid){
     destroy_pipe(fd_client, client_pid);
 }
 
+//signal handler, sends "fin" message to server and receives one back. Also calls finishing method to destroy the pipe
 void handler(int signal){
   char *confirmation[30] = {0};
   printf("Received signal: %d\n", signal);

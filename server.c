@@ -41,7 +41,6 @@ main(void)
        type = strtok(NULL, " ");
        key = strtok(NULL, " ");
        value = strtok(NULL, " ");
-       /* debug("Sr: pid: %s, first: %s, second: %s, third:%s, fourth:%s",pid_char, method, type, key, value); */
 
             if(strcmp(method, "set") == 0){
               //ifs to store the message

@@ -59,9 +59,6 @@ install: server client libstore.so libcomm.so myserver.service
 	cp -f libstore.so.$(SOVERSION) $(libdir)/libstore.so.$(SOVERSION)
 	cp -f libcomm.so.$(SOVERSION) $(libdir)/libcomm.so.$(SOVERSION)
 	cp -f myserver.service /etc/systemd/system/myserver.service
-	systemctl deamon-reload
-	systemctl enable myserver.service
-	systemctl start myserver.service
 
 .PHONY: distclean
 distclean:
